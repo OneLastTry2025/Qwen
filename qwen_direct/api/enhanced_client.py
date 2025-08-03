@@ -36,7 +36,7 @@ class QwenEnhancedClient(QwenCompleteClient):
     def generate_image(self, prompt: str, chat_id: str = None, model: str = "qwen3-235b-a22b") -> Dict[str, Any]:
         """
         Generate image from text prompt
-        Uses the chat completion endpoint with special image generation parameters
+        Uses the chat completion endpoint with image generation parameters
         """
         try:
             if not chat_id:
@@ -50,12 +50,12 @@ class QwenEnhancedClient(QwenCompleteClient):
             fid = str(uuid.uuid4())
             timestamp = int(time.time())
             
-            # Special payload for image generation
+            # Payload for image generation - similar to chat but with t2i type
             payload = {
-                "stream": False,  # Image generation typically returns single result
-                "incremental_output": False,
+                "stream": False,  # Image generation returns single result
+                "incremental_output": True,
                 "chat_id": chat_id,
-                "chat_mode": "image_generation",  # Special mode for image generation
+                "chat_mode": "normal",  # Keep as normal mode
                 "model": model,
                 "parent_id": None,
                 "messages": [{
@@ -64,14 +64,14 @@ class QwenEnhancedClient(QwenCompleteClient):
                     "childrenIds": [],
                     "role": "user",
                     "content": prompt,
-                    "user_action": "image_generation",
+                    "user_action": "chat",  # Use chat action, not image_generation
                     "files": [],
                     "timestamp": timestamp,
                     "models": [model],
                     "chat_type": "t2i",  # Text to image
                     "feature_config": {
                         "thinking_enabled": False,
-                        "output_schema": "image"
+                        "output_schema": "phase"  # Use phase like regular chat
                     },
                     "extra": {
                         "meta": {"subChatType": "t2i"}
