@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './App.css';
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || window.location.origin;
+// Use environment variable if available, otherwise use same origin for production
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 
+  (window.location.hostname === 'localhost' ? 'http://localhost:8001' : '');
 
 function App() {
   const [messages, setMessages] = useState([]);
