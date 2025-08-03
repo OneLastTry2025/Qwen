@@ -190,7 +190,7 @@ class QwenEnhancedClient(QwenCompleteClient):
     
     def send_chat_with_files(self, message: str, file_ids: List[str], chat_id: str = None, **kwargs) -> Dict[str, Any]:
         """
-        Send chat message with attached files
+        Send chat message with attached files and dynamic model configuration
         """
         try:
             if not chat_id:
@@ -212,12 +212,19 @@ class QwenEnhancedClient(QwenCompleteClient):
                     "type": "attachment"
                 })
             
+            # Extract dynamic configuration
+            model = kwargs.get('model', "qwen3-235b-a22b")
+            feature_config = kwargs.get('feature_config', {
+                "thinking_enabled": False,
+                "output_schema": "phase"
+            })
+            
             payload = {
                 "stream": kwargs.get('stream', True),
                 "incremental_output": True,
                 "chat_id": chat_id,
                 "chat_mode": "normal",
-                "model": kwargs.get('model', "qwen3-235b-a22b"),
+                "model": model,
                 "parent_id": None,
                 "messages": [{
                     "fid": fid,
@@ -228,12 +235,9 @@ class QwenEnhancedClient(QwenCompleteClient):
                     "user_action": "chat",
                     "files": files,  # Include file attachments
                     "timestamp": timestamp,
-                    "models": [kwargs.get('model', "qwen3-235b-a22b")],
+                    "models": [model],
                     "chat_type": "t2t",
-                    "feature_config": {
-                        "thinking_enabled": False,
-                        "output_schema": "phase"
-                    },
+                    "feature_config": feature_config,
                     "extra": {
                         "meta": {"subChatType": "t2t"}
                     },
@@ -244,6 +248,14 @@ class QwenEnhancedClient(QwenCompleteClient):
                 "turn_id": turn_id,
                 "modelIdx": 0
             }
+            
+            # Apply model-specific file handling
+            if kwargs.get('category') == 'vision' and any('image' in str(file_id).lower() for file_id in file_ids):
+                payload["vision_mode"] = True
+                payload["image_analysis"] = True
+            elif kwargs.get('category') == 'coding' and any('code' in str(file_id).lower() for file_id in file_ids):
+                payload["code_analysis"] = True
+                payload["syntax_detection"] = True
             
             url = f"{self.base_url}/api/v2/chat/completions"
             params = {"chat_id": chat_id}
