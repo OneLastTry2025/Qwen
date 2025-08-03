@@ -402,7 +402,7 @@ async def serve_assets(filename):
 @app.route('/static/<path:filename>')
 async def serve_react_static(filename):
     """Serve React build static files"""
-    return await send_from_directory(Path('/app/frontend/build/static'), filename)
+    return await send_from_directory('/app/frontend/build/static', filename)
 
 if __name__ == "__main__":
     print("🚀 Starting Hybrid Qwen API Server")
