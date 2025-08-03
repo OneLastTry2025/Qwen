@@ -197,13 +197,13 @@ class HybridQwenServer:
                 logger.info(f"🚀 Using Direct API for image generation")
                 result = self.direct_client.generate_image(prompt, chat_id)
                 
-                if result.get('success'):
+                if result.get('success') and result.get('image_url'):  # Only succeed if we have an image URL
                     duration = time.time() - start_time
                     self._record_performance("image", duration, "direct")
                     logger.info(f"✅ Direct API image generation completed in {duration:.2f}s")
                     return result
                 else:
-                    logger.warning(f"⚠️ Direct API image generation failed, falling back to browser")
+                    logger.warning(f"⚠️ Direct API image generation failed (no image URL), falling back to browser")
             
             except Exception as e:
                 logger.warning(f"⚠️ Direct API image generation exception: {e}, falling back to browser")
