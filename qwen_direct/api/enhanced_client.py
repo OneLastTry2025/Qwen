@@ -331,7 +331,7 @@ class QwenEnhancedClient(QwenCompleteClient):
         # Test image generation
         try:
             print("🎨 Testing Image Generation...")
-            img_result = self.generate_image("A beautiful sunset over mountains", stream=False)
+            img_result = self.generate_image("A beautiful sunset over mountains")
             if img_result.get("success"):
                 print("✅ Image Generation: OK")
                 results["successful"] += 1
