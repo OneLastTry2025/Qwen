@@ -268,7 +268,7 @@ class QwenEnhancedClient(QwenCompleteClient):
     
     def send_chat_with_web_search(self, message: str, chat_id: str = None, **kwargs) -> Dict[str, Any]:
         """
-        Send chat message with web search enabled
+        Send chat message with web search enabled and dynamic model configuration
         """
         try:
             if not chat_id:
@@ -282,12 +282,20 @@ class QwenEnhancedClient(QwenCompleteClient):
             fid = str(uuid.uuid4())
             timestamp = int(time.time())
             
+            # Extract dynamic configuration
+            model = kwargs.get('model', "qwen3-235b-a22b")
+            feature_config = kwargs.get('feature_config', {
+                "thinking_enabled": False,
+                "output_schema": "phase",
+                "web_search_enabled": True
+            })
+            
             payload = {
                 "stream": kwargs.get('stream', True),
                 "incremental_output": True,
                 "chat_id": chat_id,
                 "chat_mode": "web_search",  # Enable web search mode
-                "model": kwargs.get('model', "qwen3-235b-a22b"),
+                "model": model,
                 "parent_id": None,
                 "messages": [{
                     "fid": fid,
@@ -298,13 +306,9 @@ class QwenEnhancedClient(QwenCompleteClient):
                     "user_action": "chat_with_search",
                     "files": [],
                     "timestamp": timestamp,
-                    "models": [kwargs.get('model', "qwen3-235b-a22b")],
+                    "models": [model],
                     "chat_type": "t2t_search",
-                    "feature_config": {
-                        "thinking_enabled": False,
-                        "output_schema": "phase",
-                        "web_search_enabled": True
-                    },
+                    "feature_config": feature_config,
                     "extra": {
                         "meta": {"subChatType": "t2t_search"}
                     },
@@ -316,6 +320,13 @@ class QwenEnhancedClient(QwenCompleteClient):
                 "modelIdx": 0,
                 "web_search": True  # Enable web search
             }
+            
+            # Apply model-specific optimizations for web search
+            if kwargs.get('category') == 'reasoning':
+                payload["search_depth"] = "comprehensive"
+                payload["reasoning_mode"] = True
+            elif kwargs.get('category') == 'coding':
+                payload["search_sources"] = ["stackoverflow", "github", "docs"]
             
             url = f"{self.base_url}/api/v2/chat/completions"
             params = {"chat_id": chat_id, "web_search": "true"}
