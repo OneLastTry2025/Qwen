@@ -399,6 +399,16 @@ async def serve_assets(filename):
     """Serve static assets"""
     return await send_from_directory('/app/ui_clone/assets', filename)
 
+@app.route('/static/js/<filename>')
+async def serve_react_js(filename):
+    """Serve React JS files"""
+    return await send_from_directory('/app/frontend/build/static/js', filename)
+
+@app.route('/static/css/<filename>')
+async def serve_react_css(filename):
+    """Serve React CSS files"""
+    return await send_from_directory('/app/frontend/build/static/css', filename)
+
 @app.route('/static/<path:filename>')
 async def serve_react_static(filename):
     """Serve React build static files"""
