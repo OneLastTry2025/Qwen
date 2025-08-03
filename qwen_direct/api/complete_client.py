@@ -120,62 +120,84 @@ class QwenCompleteClient:
     # CORE CHAT & MESSAGING ENDPOINTS (4)
     # ==========================================
     
-    def send_chat_completion(self, 
-                           message: str,
-                           chat_id: str = None,
-                           model: str = "qwen3-235b-a22b", 
-                           stream: bool = True,
-                           **kwargs) -> Dict[str, Any]:
+    def send_chat_completion(self, message: str, chat_id: str = None, model: str = "qwen3-235b-a22b", stream: bool = True, **kwargs) -> Dict[str, Any]:
         """
-        Main chat completion endpoint - streaming chat responses
-        POST /api/v2/chat/completions?chat_id={chat_id}
+        Send chat completion with dynamic model configuration
         """
-        if not chat_id:
-            chat_result = self.create_new_chat()
-            if not chat_result.get('success'):
-                return {"success": False, "error": "Failed to create chat"}
-            chat_id = chat_result['data']['id']
-        
-        # Generate required IDs
-        turn_id = str(uuid.uuid4())
-        fid = str(uuid.uuid4())
-        timestamp = int(time.time())
-        
-        payload = {
-            "stream": stream,
-            "incremental_output": True,
-            "chat_id": chat_id,
-            "chat_mode": "normal",
-            "model": model,
-            "parent_id": None,
-            "messages": [{
-                "fid": fid,
-                "parentId": None,
-                "childrenIds": [],
-                "role": "user",
-                "content": message,
-                "user_action": "chat",
-                "files": [],
-                "timestamp": timestamp,
-                "models": [model],
-                "chat_type": "t2t",
-                "feature_config": {
-                    "thinking_enabled": False,
-                    "output_schema": "phase"
-                },
-                "extra": {
-                    "meta": {"subChatType": "t2t"}
-                },
-                "sub_chat_type": "t2t",
-                "parent_id": None
-            }],
-            "timestamp": timestamp,
-            "turn_id": turn_id,
-            "modelIdx": 0,
-            **kwargs
-        }
-        
         try:
+            if not chat_id:
+                chat_result = self.create_new_chat()
+                if not chat_result.get('success'):
+                    return {"success": False, "error": "Failed to create chat"}
+                chat_id = chat_result['data']['id']
+            
+            # Generate required IDs
+            turn_id = str(uuid.uuid4())
+            fid = str(uuid.uuid4())
+            timestamp = int(time.time())
+            
+            # Extract model-specific configuration from kwargs
+            feature_config = kwargs.get('feature_config', {
+                "thinking_enabled": False,
+                "output_schema": "phase"
+            })
+            
+            optimal_temp = kwargs.get('optimal_temperature', 0.3)
+            max_tokens = kwargs.get('max_tokens', 2048)
+            
+            # Build dynamic payload based on model capabilities
+            payload = {
+                "stream": stream,
+                "incremental_output": True,
+                "chat_id": chat_id,
+                "chat_mode": "normal",
+                "model": model,
+                "parent_id": None,
+                "messages": [{
+                    "fid": fid,
+                    "parentId": None,
+                    "childrenIds": [],
+                    "role": "user",
+                    "content": message,
+                    "user_action": "chat",
+                    "files": [],
+                    "timestamp": timestamp,
+                    "models": [model],
+                    "chat_type": "t2t",
+                    "feature_config": feature_config,
+                    "extra": {
+                        "meta": {"subChatType": "t2t"}
+                    },
+                    "sub_chat_type": "t2t",
+                    "parent_id": None
+                }],
+                "timestamp": timestamp,
+                "turn_id": turn_id,
+                "modelIdx": 0
+            }
+            
+            # Add model-specific parameters
+            if kwargs.get('category') == 'reasoning':
+                # For reasoning models, add specific parameters
+                payload["reasoning_mode"] = True
+                payload["max_reasoning_steps"] = 10
+                
+            elif kwargs.get('category') == 'coding':
+                # For coding models, add code-specific parameters
+                payload["code_mode"] = True
+                payload["syntax_highlighting"] = True
+                
+            elif kwargs.get('category') == 'vision':
+                # For vision models, enable multimodal features
+                payload["multimodal"] = True
+                payload["vision_enabled"] = True
+            
+            # Add temperature and max_tokens if specified
+            if optimal_temp != 0.3:
+                payload["temperature"] = optimal_temp
+            if max_tokens != 2048:
+                payload["max_tokens"] = max_tokens
+            
             url = f"{self.base_url}/api/v2/chat/completions"
             params = {"chat_id": chat_id}
             
