@@ -208,17 +208,39 @@ class HybridQwenServer:
             except Exception as e:
                 logger.warning(f"⚠️ Direct API image generation exception: {e}, falling back to browser")
         
+        # Check if browser manager is available
+        if not self.browser_manager or not hasattr(self.browser_manager, 'get_page'):
+            logger.warning(f"⚠️ Browser automation not available for image generation")
+            return {
+                "success": False, 
+                "error": "Image generation currently unavailable. Direct API doesn't support images and browser fallback is not initialized.",
+                "image_url": None,
+                "chat_id": chat_id
+            }
+        
         # Fallback to browser automation
         logger.info(f"🔄 Using Browser Automation for image generation")
-        page = await self.browser_manager.get_page()
         try:
+            page = await self.browser_manager.get_page()
             result = await generate_qwen_image(page, prompt)
             duration = time.time() - start_time
             self._record_performance("image", duration, "browser")
             logger.info(f"✅ Browser image generation completed in {duration:.2f}s")
             return result
+        except Exception as e:
+            logger.error(f"❌ Browser image generation failed: {e}")
+            return {
+                "success": False,
+                "error": f"Image generation failed: {e}",
+                "image_url": None,
+                "chat_id": chat_id
+            }
         finally:
-            self.browser_manager.release_page(page)
+            if hasattr(self, 'browser_manager') and self.browser_manager:
+                try:
+                    self.browser_manager.release_page(page)
+                except:
+                    pass
     
     async def get_models(self) -> dict:
         """
