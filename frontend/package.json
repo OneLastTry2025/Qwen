@@ -1,0 +1,8 @@
+{
+  "name": "qwen-frontend",
+  "version": "1.0.0",
+  "scripts": {
+    "start": "python -m http.server 3000 --directory ../ui_clone"
+  },
+  "dependencies": {}
+}

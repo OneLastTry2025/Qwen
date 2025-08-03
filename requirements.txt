@@ -1,0 +1,9 @@
+playwright
+playwright-stealth
+requests
+brotli
+urllib3
+flask
+quart
+quart-cors
+python-dotenv

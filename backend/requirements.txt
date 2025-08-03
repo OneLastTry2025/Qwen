@@ -1,0 +1,9 @@
+# Copy of requirements for backend directory
+playwright
+playwright-stealth
+requests
+brotli
+urllib3
+flask
+quart
+quart-cors

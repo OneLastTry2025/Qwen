@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en-US" class="is-chrome is-desktop is-win light">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Qwen Clone</title>
+    
+    <!-- Qwen's Original CSS for layout and theme -->
+    <link rel="stylesheet" crossorigin="" href="https://assets.alicdn.com/g/qwenweb/qwen-webui-fe/0.0.169/_app/immutable/assets/aes.D1ndKJq0.css">
+    <link rel="stylesheet" crossorigin="" href="https://assets.alicdn.com/g/qwenweb/qwen-webui-fe/0.0.169/_app/immutable/assets/0.BDUhF7UC.css">
+    <link rel="stylesheet" crossorigin="" href="https://assets.alicdn.com/g/qwenweb/qwen-webui-fe/0.0.169/_app/immutable/assets/2.DqKaB5UK.css">
+    <link rel="stylesheet" crossorigin="" href="https://assets.alicdn.com/g/qwenweb/qwen-webui-fe/0.0.169/_app/immutable/assets/Navbar.Ba7h1wvu.css">
+    <link rel="stylesheet" crossorigin="" href="https://assets.alicdn.com/g/qwenweb/qwen-webui-fe/0.0.169/_app/immutable/assets/ChatContent.tpFCF9HS.css">
+
+    <!-- Our Custom CSS for functionality -->
+    <link rel="stylesheet" href="/assets/style.css">
+
+    <script>
+        // Set theme based on system preference
+        (() => {
+            const isDarkMode = window.matchMedia("(prefers-color-scheme: dark)").matches;
+            if (isDarkMode) {
+                document.documentElement.classList.add("dark");
+                document.documentElement.classList.remove("light");
+            }
+        })();
+    </script>
+</head>
+
+<body data-sveltekit-preload-data="hover" data-spm="29997169" style="overflow: unset;">
+    <div id="app" style="display:contents">
+        <div class="app relative h-full" id="app-container" style="height: 100vh;">
+            <div class="flex h-full flex-row justify-start overflow-auto text-gray-700 dark:text-gray-100 ">
+                
+                <!-- ==================================================== -->
+                <!-- Mission 1.1: Sidebar - HTML Implementation         -->
+                <!-- This structure is based on the SnapDOM you provided. -->
+                <!-- ==================================================== -->
+                <div class="sidebar-container show-sidebar false svelte-sbzh33" data-state="true" id="sidebar">
+                    <div class="side">
+                        <div class="header-wrapper">
+                            <img alt="logo" class="logo-img" crossorigin="anonymous" src="https://assets.alicdn.com/g/qwenweb/qwen-webui-fe/0.0.169/static/qwen_row_text_icon_light_540.png">
+                            <button aria-label="切换侧边栏" class="slide-switch">
+                                <i class="iconfont leading-none icon-line-sidebar-01 slide-switch-icon">
+                                </i>
+                            </button>
+                        </div>
+                        <a class="sidebar-new-chat" draggable="false" id="sidebar-new-chat-button">
+                            <i class="iconfont leading-none icon-line-plus-01 sidebar-new-chat-icon">
+                            </i>
+                            <div class="sidebar-new-chat-text" style="line-height: normal;">New Chat</div>
+                        </a>
+                        <div class="temporary svelte-sbzh33">
+                            <div class="search-container" id="search-container">
+                                <div class="chat-search" id="chat-search">
+                                    <div class="chat-search-icon">
+                                        <i class="iconfont leading-none icon-line-search-01 chat-search-icon-other">
+                                        </i>
+                                    </div>
+                                    <input class="chat-search-input" maxlength="1000" placeholder="Search">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="session-list-wrapper">
+                            <div class="session-list">
+                                <div class="relative list-folder">
+                                    <div class="w-full">
+                                        <div class="w-full cursor-pointer">
+                                            <div>
+                                                <div class="w-full">
+                                                    <button class="flex w-full items-center gap-1.5 rounded-md px-2 py-1.5 font-medium text-gray-500 transition hover:bg-gray-100 dark:text-gray-500 dark:hover:bg-gray-900">
+                                                        <div class="flex items-center text-[#2C2C36] dark:text-gray-600">
+                                                            <i class="iconfont leading-none icon-line-chevron-down font-bold"></i>
+                                                        </div>
+                                                        <div class="translate-y-[0.5px] text-xs text-gray-85 dark:text-gray-200">All chats</div>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <!-- Placeholder for our dynamic chat history -->
+                                        <ul id="chat-history-list" class="list-folder-chats"></ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="user" id="sidebar-footer">
+                            <!-- Placeholder for our dynamic model name -->
+                            Model: <strong id="model-name">Loading...</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ==================================================== -->
+                <!-- Placeholder for Mission 1.2: Main Content Area     -->
+                <!-- This structure is based on the SnapDOM you provided. -->
+                <!-- ==================================================== -->
+                <div id="main-content" class="chatContent svelte-rytfuc">
+                    <!-- Top navigation bar from SnapDOM -->
+                    <div class="sticky top-0 z-30 navbar-bg flex w-full items-center px-1.5 py-1.5">
+                        <div class="mx-auto flex w-full max-w-full bg-transparent px-1 pt-0.5">
+                            <div class="flex w-full max-w-full items-center">
+                                <!-- Mobile sidebar toggle -->
+                                <div class="md:hidden text-gray-[#585A73] flex h-[2.5rem] flex-none items-center self-start dark:text-gray-30">
+                                    <button aria-label="Toggle Sidebar" class="flex cursor-pointer items-center justify-center rounded-xl transition hover:bg-gray-50 dark:hover:bg-gray-850" id="sidebar-toggle-button">
+                                        <i class="iconfont leading-none icon-line-sidebar-01 !text-24 mr-[1.25rem] ml-[0.625rem]"></i>
+                                    </button>
+                                </div>
+                                <!-- Model Selector Area from SnapDOM -->
+                                <div class="max-w-full flex-1 overflow-hidden py-0.5 ml-1">
+                                    <div class="flex flex-col w-full items-start">
+                                        <div class="flex w-full max-w-fit">
+                                            <div class="overflow-hidden w-full">
+                                                <div class="mr-1 max-w-full">
+                                                    <div class="no-translate" translate="no">
+                                                        <button id="model-selector-button" class="font-primary relative w-full" aria-label="Select a model">
+                                                            <div class="flex w-full truncate text-left outline-none text-lg items-center placeholder-gray-400 focus:outline-none bg-transparent px-0.5 ml-[0.25rem] font-medium svelte-12klfnr">
+                                                                <div id="model-name-display" style="width: 100%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;">Qwen-Plus</div>
+                                                                <i class="iconfont leading-none icon-line-chevron-down !text-24"></i>
+                                                            </div>
+                                                        </button>
+                                                        <!-- Mission 3: Model Selector Dropdown -->
+                                                        <div id="model-selector-dropdown" class="absolute z-10 mt-2 w-56 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none hidden" role="menu">
+                                                            <div class="py-1" role="none">
+                                                                <a href="#" class="text-gray-700 block px-4 py-2 text-sm" role="menuitem">Qwen-Max (Placeholder)</a>
+                                                                <a href="#" class="text-gray-700 block px-4 py-2 text-sm" role="menuitem">Qwen-Long (Placeholder)</a>
+                                                                <a href="#" class="text-gray-700 block px-4 py-2 text-sm" role="menuitem">Qwen-Plus (Current)</a>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Chat Container -->
+                    <div id="chat-container" class="max-h-[100dvh] relative h-full overflow-hidden chat-container transition-width duration-500 ease-in-out flex w-full max-w-full flex-col">
+                        <!-- Welcome message from SnapDOM -->
+                        <div id="welcome-message" class="m-auto w-full max-w-6xl px-2 text-center xl:px-20">
+                            <div class="font-primary flex w-full items-center gap-4 text-center text-3xl font-medium text-gray-800 dark:text-gray-100" style="height: calc(100% - 120px);">
+                                <div class="flex w-full flex-col items-center justify-center" style="transform: translateY(-108px)">
+                                    <div class="flex w-full justify-center px-5 pb-[1.75rem] flex-row gap-3 sm:gap-3.5">
+                                        <div class="h-10 pb-1 text-[2rem] ellipsis unicode align-super font-semibold svelte-4jbxy9" style="line-height: 2.5rem;">Qwen Clone</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Our messages will be injected here -->
+                    </div>
+
+                    <!-- ==================================================== -->
+                    <!-- Placeholder for Mission 1.3: Input Area            -->
+                    <!-- This structure is based on the SnapDOM you provided. -->
+                    <!-- ==================================================== -->
+                    <div id="input-area" class="w-full self-center">
+                        <div class="mx-auto w-full max-w-4xl">
+                            <div class="chat-message-input" id="chat-message-input">
+                                <!-- File Pills will be injected here by JS -->
+                                <div id="file-list-container" class="px-4 pt-2"></div>
+                                <div class="chat-message-input-container svelte-17xwb8y">
+                                    <div class="chat-message-input-container-inner svelte-17xwb8y">
+                                        <div>
+                                            <input id="file-upload" multiple="" style="display: none;" type="file">
+                                            <form id="prompt-form" class="flex w-full gap-1.5">
+                                                <div class="_fileListBox_71e98_10 svelte-17xwb8y chat-message-input-file-list-pc" dir="LTR">
+                                                    <div class="flex">
+                                                        <div class="chat-message-input-textarea-container-pc">
+                                                            <textarea class="text-area-box-web svelte-l6994v" id="chat-input" placeholder="Message Qwen..." rows="1" style="text-indent: 0px; height: 48px;"></textarea>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="flex items-end max-w-10 absolute right-3" style="bottom: 12px;">
+                                                    <button id="send-button" type="submit" class="self-center rounded-full bg-purple-500 p-1 text-white transition hover:bg-purple-600 svelte-17whogv">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
+                                                    </button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                        <div class="flex items-center min-h-[56px] mt-0.5 p-3 svelte-17xwb8y">
+                                            <div class="flex items-center pr-2">
+                                                <button id="attachment-button" class="chat-prompt-upload-group-btn">
+                                                    <i class="iconfont leading-none icon-line-plus-03 chat-prompt-upload-group-btn-icon"></i>
+                                                </button>
+                                            </div>
+                                            <div id="tool-buttons-container" class="scrollbar-none flex items-center left-content operationBtn svelte-17xwb8y">
+                                                <button id="web-search-button" class="chat-input-feature-btn websearch_button">
+                                                    <i class="iconfont leading-none icon-line-globe-01 chat-input-feature-btn-icon"></i>
+                                                    <span class="chat-input-feature-btn-text">Search</span>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="chat-message-input-recommend-container svelte-17xwb8y">
+                                        <div class="chat-recommend-txt">
+                                            <div id="action-buttons-container" class="chat-recommend-txt-container">
+                                                <!-- Action buttons will be injected here by JS -->
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+    <script src="/assets/script.js" defer></script>
+</body>
+</html>
