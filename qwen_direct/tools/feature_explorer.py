@@ -31,7 +31,7 @@ class QwenFeatureExplorer:
         playwright = await async_playwright().start()
         
         self.browser = await playwright.chromium.launch(
-            headless=False,  # Keep visible for debugging
+            headless=True,  # Must be headless in container environment
             args=[
                 '--disable-blink-features=AutomationControlled',
                 '--disable-web-security',
