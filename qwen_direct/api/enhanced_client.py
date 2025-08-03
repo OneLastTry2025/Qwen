@@ -10,6 +10,7 @@ import uuid
 import time
 import sseclient
 import base64
+import re
 from typing import Dict, Any, Optional, List
 from complete_client import QwenCompleteClient
 import logging
