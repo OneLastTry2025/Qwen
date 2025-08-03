@@ -509,14 +509,30 @@ async def folders_handler():
     result = hybrid_server.direct_client.get_folders()
     return jsonify(result), 200 if result.get('success') else 500
 
-@app.route('/api/auth/status', methods=['GET'])
-async def auth_status_handler():
-    """Get authentication status (direct API only)"""
-    if not hybrid_server.direct_api_working:
-        return jsonify({"status": "error", "message": "Direct API not available"}), 503
+@app.route('/api/model-info/<model_name>', methods=['GET'])
+async def model_info_handler(model_name: str):
+    """Get model information and capabilities"""
+    model_config = hybrid_server._get_model_config(model_name)
     
-    result = hybrid_server.direct_client.get_auth_status()
-    return jsonify(result), 200 if result.get('success') else 500
+    return jsonify({
+        "success": True,
+        "model_name": model_name,
+        "config": model_config,
+        "capabilities": {
+            "web_search": model_config.get("supports_web_search", False),
+            "file_upload": model_config.get("supports_files", False),
+            "image_generation": model_config.get("supports_images", False),
+            "audio_processing": model_config.get("supports_audio", False),
+            "thinking_mode": model_config.get("thinking_enabled", False)
+        },
+        "recommended_use": {
+            "coding": "Ideal for code generation, debugging, and technical documentation" if model_config.get("category") == "coding" else None,
+            "reasoning": "Best for complex problem-solving and step-by-step analysis" if model_config.get("category") == "reasoning" else None,
+            "vision": "Optimized for image analysis and visual content understanding" if model_config.get("category") == "vision" else None,
+            "multimodal": "Supports text, images, and audio processing" if model_config.get("category") == "multimodal" else None,
+            "general": "Versatile model for general conversational AI tasks" if model_config.get("category") == "standard" else None
+        }
+    })
 
 # --- Frontend Serving (maintain compatibility) ---
 @app.route('/')
