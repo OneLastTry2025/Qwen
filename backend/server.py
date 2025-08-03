@@ -388,9 +388,9 @@ async def auth_status_handler():
 async def serve_index():
     """Serve the main UI"""
     # Check if React build exists, otherwise serve original UI
-    react_build_path = Path('frontend/build/index.html')
+    react_build_path = Path('/app/frontend/build/index.html')
     if react_build_path.exists():
-        return await send_from_directory('frontend/build', 'index.html')
+        return await send_from_directory('/app/frontend/build', 'index.html')
     else:
         return await send_from_directory('ui_clone', 'index.html')
 
