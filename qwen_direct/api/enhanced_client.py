@@ -11,7 +11,7 @@ import time
 import sseclient
 import base64
 from typing import Dict, Any, Optional, List
-from .complete_client import QwenCompleteClient
+from complete_client import QwenCompleteClient
 import logging
 
 logger = logging.getLogger(__name__)
