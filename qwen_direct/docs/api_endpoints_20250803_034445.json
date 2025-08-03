@@ -1,0 +1,121 @@
+{
+  "/": {
+    "methods": [
+      "GET"
+    ],
+    "call_count": 1,
+    "first_seen": "2025-08-03T03:43:59.897760"
+  },
+  "/scripts/stat.js": {
+    "methods": [
+      "GET"
+    ],
+    "call_count": 1,
+    "first_seen": "2025-08-03T03:44:01.401977"
+  },
+  "/api/config": {
+    "methods": [
+      "GET"
+    ],
+    "call_count": 1,
+    "first_seen": "2025-08-03T03:44:03.176639"
+  },
+  "/api/v1/auths/": {
+    "methods": [
+      "GET"
+    ],
+    "call_count": 1,
+    "first_seen": "2025-08-03T03:44:03.966408"
+  },
+  "/api/models": {
+    "methods": [
+      "GET"
+    ],
+    "call_count": 1,
+    "first_seen": "2025-08-03T03:44:04.573164"
+  },
+  "/api/v2/mcp/list": {
+    "methods": [
+      "GET"
+    ],
+    "call_count": 1,
+    "first_seen": "2025-08-03T03:44:04.666557"
+  },
+  "/api/v2/users/user/settings": {
+    "methods": [
+      "GET"
+    ],
+    "call_count": 1,
+    "first_seen": "2025-08-03T03:44:05.195955"
+  },
+  "/api/v1/users/user/settings": {
+    "methods": [
+      "GET"
+    ],
+    "call_count": 3,
+    "first_seen": "2025-08-03T03:44:05.507890"
+  },
+  "/api/v1/configs/banners": {
+    "methods": [
+      "GET"
+    ],
+    "call_count": 1,
+    "first_seen": "2025-08-03T03:44:05.988351"
+  },
+  "/api/v2/chats/all/tags": {
+    "methods": [
+      "GET"
+    ],
+    "call_count": 2,
+    "first_seen": "2025-08-03T03:44:06.366002"
+  },
+  "/api/v2/chats/pinned": {
+    "methods": [
+      "GET"
+    ],
+    "call_count": 1,
+    "first_seen": "2025-08-03T03:44:07.169615"
+  },
+  "/api/v2/folders/": {
+    "methods": [
+      "GET"
+    ],
+    "call_count": 1,
+    "first_seen": "2025-08-03T03:44:07.574469"
+  },
+  "/api/v2/chats/": {
+    "methods": [
+      "GET"
+    ],
+    "call_count": 3,
+    "first_seen": "2025-08-03T03:44:07.777174"
+  },
+  "/api/v2/chats/new": {
+    "methods": [
+      "POST"
+    ],
+    "call_count": 1,
+    "first_seen": "2025-08-03T03:44:26.574202"
+  },
+  "/api/v2/chat/completions": {
+    "methods": [
+      "POST"
+    ],
+    "call_count": 1,
+    "first_seen": "2025-08-03T03:44:27.872188"
+  },
+  "/api/v2/chats/f820da3c-84fa-4543-9b8e-1e8191c910ca": {
+    "methods": [
+      "GET"
+    ],
+    "call_count": 1,
+    "first_seen": "2025-08-03T03:44:30.399036"
+  },
+  "/chat_qwen_ai.29997173.226527a1": {
+    "methods": [
+      "POST"
+    ],
+    "call_count": 1,
+    "first_seen": "2025-08-03T03:44:32.843885"
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "sidebar": [],
+  "chat": [
+    "file_upload",
+    "send_message"
+  ],
+  "advanced": [
+    "image_generation"
+  ],
+  "user": []
+}
