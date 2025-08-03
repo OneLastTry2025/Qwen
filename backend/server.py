@@ -397,7 +397,7 @@ async def serve_index():
 @app.route('/assets/<path:filename>')
 async def serve_assets(filename):
     """Serve static assets"""
-    return await send_from_directory(Path('ui_clone') / 'assets', filename)
+    return await send_from_directory('/app/ui_clone/assets', filename)
 
 @app.route('/static/<path:filename>')
 async def serve_react_static(filename):
