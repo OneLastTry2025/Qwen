@@ -113,13 +113,126 @@ class HybridQwenServer:
             speed_improvement = self.performance_stats["avg_browser_time"] / self.performance_stats["avg_direct_time"]
             logger.info(f"⚡ Performance: Direct API is {speed_improvement:.1f}x faster than browser automation")
     
+    def _get_model_config(self, model_name: str) -> dict:
+        """
+        Get model-specific configuration and capabilities
+        Different models have different optimal settings and capabilities
+        """
+        # Normalize model name to handle variations
+        model_lower = model_name.lower() if model_name else ""
+        
+        # Model categories and their configurations
+        if "coder" in model_lower:
+            # Coding models - optimized for code generation
+            return {
+                "category": "coding",
+                "supports_web_search": True,
+                "supports_files": True,
+                "optimal_temperature": 0.1,  # Lower for precise code
+                "max_tokens": 4096,
+                "thinking_enabled": True,  # Enable reasoning for complex code
+                "output_schema": "phase",
+                "feature_config": {
+                    "thinking_enabled": True,
+                    "output_schema": "phase",
+                    "code_completion": True
+                }
+            }
+        elif any(x in model_lower for x in ["vl", "vision", "qvq"]):
+            # Vision-Language models
+            return {
+                "category": "vision",
+                "supports_web_search": True,
+                "supports_files": True,
+                "supports_images": True,
+                "optimal_temperature": 0.3,
+                "max_tokens": 2048,
+                "thinking_enabled": False,
+                "output_schema": "phase",
+                "feature_config": {
+                    "thinking_enabled": False,
+                    "output_schema": "phase",
+                    "vision_enabled": True
+                }
+            }
+        elif "qwq" in model_lower:
+            # Reasoning models - QwQ series
+            return {
+                "category": "reasoning", 
+                "supports_web_search": True,
+                "supports_files": True,
+                "optimal_temperature": 0.2,
+                "max_tokens": 8192,  # Higher for detailed reasoning
+                "thinking_enabled": True,  # Essential for reasoning models
+                "output_schema": "thinking",  # Use thinking schema
+                "feature_config": {
+                    "thinking_enabled": True,
+                    "output_schema": "thinking",
+                    "step_by_step": True
+                }
+            }
+        elif any(x in model_lower for x in ["max", "plus", "235b"]):
+            # High-capability models
+            return {
+                "category": "advanced",
+                "supports_web_search": True,
+                "supports_files": True,
+                "optimal_temperature": 0.3,
+                "max_tokens": 6144,
+                "thinking_enabled": True,
+                "output_schema": "phase",
+                "feature_config": {
+                    "thinking_enabled": True,
+                    "output_schema": "phase",
+                    "advanced_reasoning": True
+                }
+            }
+        elif "omni" in model_lower:
+            # Multimodal models
+            return {
+                "category": "multimodal",
+                "supports_web_search": True,
+                "supports_files": True,
+                "supports_audio": True,
+                "optimal_temperature": 0.3,
+                "max_tokens": 4096,
+                "thinking_enabled": False,
+                "output_schema": "phase",
+                "feature_config": {
+                    "thinking_enabled": False,
+                    "output_schema": "phase",
+                    "multimodal": True
+                }
+            }
+        else:
+            # Default/standard models (Turbo, etc.)
+            return {
+                "category": "standard",
+                "supports_web_search": True,
+                "supports_files": True,
+                "optimal_temperature": 0.3,
+                "max_tokens": 2048,
+                "thinking_enabled": False,
+                "output_schema": "phase",
+                "feature_config": {
+                    "thinking_enabled": False,
+                    "output_schema": "phase"
+                }
+            }
+
     async def send_message(self, prompt: str, chat_id: str = None, use_web_search: bool = False, 
                           agent_name: str = None, model_name: str = None, file_paths: list = None) -> dict:
         """
-        Send chat message with hybrid approach
+        Send chat message with hybrid approach and dynamic model configuration
         Priority: Direct API -> Browser fallback
         """
         start_time = time.time()
+        
+        # Get model-specific configuration
+        model_config = self._get_model_config(model_name)
+        effective_model = model_name or "qwen3-235b-a22b"
+        
+        logger.info(f"🧠 Using model: {effective_model} (category: {model_config['category']})")
         
         # Try direct API first if available
         if self.direct_api_working and self.direct_client:
@@ -128,7 +241,7 @@ class HybridQwenServer:
                 
                 if use_web_search:
                     result = self.direct_client.send_chat_with_web_search(
-                        prompt, chat_id, stream=False, model=model_name or "qwen3-235b-a22b"
+                        prompt, chat_id, stream=False, model=effective_model, **model_config
                     )
                 elif file_paths and hasattr(self.direct_client, 'send_chat_with_files'):
                     # Upload files first, then send message
@@ -139,11 +252,11 @@ class HybridQwenServer:
                             file_ids.append(upload_result['file_id'])
                     
                     result = self.direct_client.send_chat_with_files(
-                        prompt, file_ids, chat_id, stream=False, model=model_name or "qwen3-235b-a22b"
+                        prompt, file_ids, chat_id, stream=False, model=effective_model, **model_config
                     )
                 else:
                     result = self.direct_client.send_chat_completion(
-                        prompt, chat_id, model=model_name or "qwen3-235b-a22b", stream=False
+                        prompt, chat_id, model=effective_model, stream=False, **model_config
                     )
                 
                 if result.get('success'):
