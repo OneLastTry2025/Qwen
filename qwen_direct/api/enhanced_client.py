@@ -92,19 +92,42 @@ class QwenEnhancedClient(QwenCompleteClient):
             
             data = response.json()
             
-            # Extract image URL from response
+            # Extract image URL from response - try multiple formats
             image_url = None
+            
+            # Try to extract from choices
             if data.get('choices') and len(data['choices']) > 0:
                 choice = data['choices'][0]
                 if 'message' in choice and 'content' in choice['message']:
                     content = choice['message']['content']
-                    # Parse content for image URL (format may vary)
-                    if isinstance(content, str) and ('http' in content or 'blob:' in content):
-                        image_url = content
-                    elif isinstance(content, dict) and 'image_url' in content:
-                        image_url = content['image_url']
+                    # Try different content formats
+                    if isinstance(content, str):
+                        # Look for URLs in text content
+                        import re
+                        url_pattern = r'https?://[^\s<>"]+\.(jpg|jpeg|png|gif|webp)'
+                        urls = re.findall(url_pattern, content, re.IGNORECASE)
+                        if urls:
+                            image_url = urls[0][0] if isinstance(urls[0], tuple) else urls[0]
+                        elif 'blob:' in content:
+                            # Handle blob URLs
+                            blob_match = re.search(r'blob:[^)\s]+', content)
+                            if blob_match:
+                                image_url = blob_match.group(0)
+                    elif isinstance(content, dict):
+                        image_url = content.get('image_url') or content.get('url') or content.get('src')
             
-            logger.info(f"✅ Image generated successfully for prompt: {prompt[:50]}...")
+            # Try to extract from data structure
+            if not image_url and 'data' in data:
+                data_content = data['data']
+                if isinstance(data_content, dict):
+                    image_url = data_content.get('image_url') or data_content.get('url')
+                    
+            logger.info(f"✅ Image generation completed for prompt: {prompt[:50]}...")
+            if image_url:
+                logger.info(f"✅ Image URL extracted: {image_url[:100]}...")
+            else:
+                logger.warning(f"⚠️ No image URL found in response")
+                logger.debug(f"Response data: {json.dumps(data, indent=2)[:500]}...")
             
             return {
                 "success": True,
