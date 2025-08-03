@@ -150,7 +150,22 @@ class HybridQwenServer:
                     duration = time.time() - start_time
                     self._record_performance("chat", duration, "direct")
                     logger.info(f"✅ Direct API chat completed in {duration:.2f}s")
-                    return result
+                    
+                    # Extract response from nested structure
+                    response_text = ""
+                    if result.get('data', {}).get('data', {}).get('choices'):
+                        choices = result['data']['data']['choices']
+                        if choices and len(choices) > 0:
+                            response_text = choices[0].get('message', {}).get('content', '')
+                    elif result.get('response'):
+                        response_text = result['response']
+                    
+                    return {
+                        "success": True,
+                        "response": response_text,
+                        "chat_id": result.get('chat_id'),
+                        "data": result.get('data')
+                    }
                 else:
                     logger.warning(f"⚠️ Direct API failed: {result.get('error')}, falling back to browser")
             
