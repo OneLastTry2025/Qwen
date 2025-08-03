@@ -30,7 +30,7 @@ except ImportError:
         DIRECT_API_AVAILABLE = False
 
 # Import original Playwright system as fallback
-from server import BrowserManager, ask_qwen, generate_qwen_image, get_available_models
+from server_original import BrowserManager, ask_qwen, generate_qwen_image, get_available_models
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
