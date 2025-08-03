@@ -9,3 +9,4 @@ quart
 quart-cors
 markupsafe
 sseclient-py
+aiofiles
