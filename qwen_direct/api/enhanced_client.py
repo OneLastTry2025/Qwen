@@ -34,7 +34,7 @@ class QwenEnhancedClient(QwenCompleteClient):
     # ADVANCED FEATURES - IMAGE GENERATION
     # ==========================================
     
-    def generate_image(self, prompt: str, chat_id: str = None, model: str = "qwen3-235b-a22b") -> Dict[str, Any]:
+    def generate_image(self, prompt: str, chat_id: str = None, model: str = "qwen-max-latest") -> Dict[str, Any]:
         """
         Generate image from text prompt
         Uses the chat completion endpoint with image generation parameters
