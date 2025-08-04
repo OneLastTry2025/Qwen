@@ -65,7 +65,7 @@ class QwenEnhancedClient(QwenCompleteClient):
                     "childrenIds": [],
                     "role": "user",
                     "content": prompt,
-                    "user_action": "chat",  # Use chat action, not image_generation
+                    "user_action": "image_generation",  # Use image_generation action
                     "files": [],
                     "timestamp": timestamp,
                     "models": [model],
