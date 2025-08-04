@@ -9,7 +9,7 @@ import json
 import sys
 
 # API base URL
-BASE_URL = "https://e21bfd9a-c20b-421f-91e6-f8c33aaa7c57.preview.emergentagent.com"
+BASE_URL = "https://ae4616c9-8ef9-44e0-a434-5447f7ca1524.preview.emergentagent.com"
 
 def get_all_models():
     """Get list of all available models"""
