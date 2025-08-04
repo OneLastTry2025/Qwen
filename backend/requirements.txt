@@ -8,5 +8,6 @@ flask
 quart
 quart-cors
 markupsafe
+werkzeug
 sseclient-py
 aiofiles
