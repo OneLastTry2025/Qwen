@@ -37,118 +37,69 @@ class QwenEnhancedClient(QwenCompleteClient):
     def generate_image(self, prompt: str, chat_id: str = None, model: str = "qwen3-235b-a22b") -> Dict[str, Any]:
         """
         Generate image from text prompt
-        Uses the chat completion endpoint with MCP image-generation capability
+        First tries to send a chat message that triggers image generation capability
         """
         try:
-            if not chat_id:
-                chat_result = self.create_new_chat()
-                if not chat_result.get('success'):
-                    return {"success": False, "error": "Failed to create chat for image generation"}
-                chat_id = chat_result['data']['id']
+            # Try sending regular chat message with explicit image generation request
+            result = self.send_chat_completion(
+                f"Please generate an image of: {prompt}. Use your image generation capability to create this image, do not provide instructions on how to create it manually.",
+                chat_id=chat_id,
+                model=model,
+                stream=False
+            )
             
-            # Generate required IDs
-            turn_id = str(uuid.uuid4())
-            fid = str(uuid.uuid4())
-            timestamp = int(time.time())
-            
-            # Try MCP-based image generation payload
-            payload = {
-                "stream": False,  # Image generation returns single result
-                "incremental_output": True,
-                "chat_id": chat_id,
-                "chat_mode": "normal",
-                "model": model,
-                "parent_id": None,
-                "messages": [{
-                    "fid": fid,
-                    "parentId": None,
-                    "childrenIds": [],
-                    "role": "user",
-                    "content": f"Generate an image: {prompt}",  # Explicit instruction
-                    "user_action": "chat",  # Use regular chat action
-                    "files": [],
-                    "timestamp": timestamp,
-                    "models": [model],
-                    "chat_type": "t2t",  # Start with text-to-text 
-                    "feature_config": {
-                        "thinking_enabled": False,
-                        "output_schema": "phase"
-                    },
-                    "extra": {
-                        "meta": {},
-                        "mcp": {
-                            "action": "image-generation",  # Use MCP for image generation
-                            "parameters": {
-                                "prompt": prompt,
-                                "style": "realistic"
-                            }
-                        }
-                    },
-                    "sub_chat_type": "t2t",
-                    "parent_id": None
-                }],
-                "timestamp": timestamp,
-                "turn_id": turn_id,
-                "modelIdx": 0,
-                "mcp_enabled": True  # Enable MCP
-            }
-            
-            url = f"{self.base_url}/api/v2/chat/completions"
-            params = {"chat_id": chat_id}
-            
-            response = self.session.post(url, json=payload, params=params)
-            response.raise_for_status()
-            
-            data = response.json()
-            
-            # Extract image URL from response - try multiple formats
-            image_url = None
-            
-            # Try to extract from choices
-            if data.get('choices') and len(data['choices']) > 0:
-                choice = data['choices'][0]
-                if 'message' in choice and 'content' in choice['message']:
-                    content = choice['message']['content']
-                    # Try different content formats
-                    if isinstance(content, str):
-                        # Look for URLs in text content
-                        import re
-                        url_pattern = r'https?://[^\s<>"]+\.(jpg|jpeg|png|gif|webp)'
-                        urls = re.findall(url_pattern, content, re.IGNORECASE)
-                        if urls:
-                            image_url = urls[0][0] if isinstance(urls[0], tuple) else urls[0]
-                        elif 'blob:' in content:
-                            # Handle blob URLs
-                            blob_match = re.search(r'blob:[^)\s]+', content)
-                            if blob_match:
-                                image_url = blob_match.group(0)
-                    elif isinstance(content, dict):
-                        image_url = content.get('image_url') or content.get('url') or content.get('src')
-            
-            # Try to extract from data structure
-            if not image_url and 'data' in data:
-                data_content = data['data']
-                if isinstance(data_content, dict):
-                    image_url = data_content.get('image_url') or data_content.get('url')
+            if result.get('success'):
+                # Check if the response contains an image URL
+                response_data = result.get('data', {})
+                choices = response_data.get('data', {}).get('choices', [])
+                
+                if choices:
+                    content = choices[0].get('message', {}).get('content', '')
                     
-            logger.info(f"✅ Image generation completed for prompt: {prompt[:50]}...")
+                    # More comprehensive image URL extraction
+                    import re
+                    
+                    # Look for various image URL patterns
+                    url_patterns = [
+                        r'https?://[^\s<>"]+\.(?:jpg|jpeg|png|gif|webp|bmp)',  # Standard image URLs
+                        r'blob:[^)\s<>"]+',  # Blob URLs
+                        r'data:image/[^;]+;base64,[A-Za-z0-9+/=]+',  # Data URLs
+                        r'https?://[^\s<>"]+/(?:image|img|picture|photo)/[^\s<>"]+',  # Image paths
+                        r'!\[.*?\]\((https?://[^\s<>"]+)\)',  # Markdown image syntax
+                        r'<img[^>]+src=["\']([^"\']+)["\'][^>]*>',  # HTML img tags
+                    ]
+                    
+                    image_url = None
+                    for pattern in url_patterns:
+                        matches = re.findall(pattern, content, re.IGNORECASE)
+                        if matches:
+                            # Take the first match, handle tuple results from groups
+                            image_url = matches[0] if isinstance(matches[0], str) else matches[0][0]
+                            break
+                    
+                    # Enhanced debug logging
+                    logger.info(f"✅ Image generation completed for prompt: {prompt[:50]}...")
+                    logger.info(f"🔍 FULL API RESPONSE STRUCTURE:")
+                    logger.info(f"Response keys: {list(response_data.keys()) if isinstance(response_data, dict) else 'Not a dict'}")
+                    logger.info(f"Response content: {content[:1000]}...")
+                    
+                    if image_url:
+                        logger.info(f"✅ Image URL extracted: {image_url[:100]}...")
+                    else:
+                        logger.warning(f"⚠️ No image URL found in response")
+                        # Check if model actually generated an image but we can't extract the URL
+                        if any(word in content.lower() for word in ['image', 'generated', 'created', 'picture']):
+                            logger.warning(f"⚠️ Model may have generated an image but URL extraction failed")
+                    
+                    return {
+                        "success": True,
+                        "image_url": image_url,
+                        "chat_id": result.get('chat_id'),
+                        "data": response_data,
+                        "raw_content": content  # Include raw content for debugging
+                    }
             
-            # DETAILED LOGGING FOR DEBUGGING
-            logger.info(f"🔍 FULL API RESPONSE STRUCTURE:")
-            logger.info(f"Response keys: {list(data.keys()) if isinstance(data, dict) else 'Not a dict'}")
-            logger.info(f"Full response data: {json.dumps(data, indent=2)}")
-            
-            if image_url:
-                logger.info(f"✅ Image URL extracted: {image_url[:100]}...")
-            else:
-                logger.warning(f"⚠️ No image URL found in response")
-            
-            return {
-                "success": True,
-                "image_url": image_url,
-                "chat_id": chat_id,
-                "data": data
-            }
+            return {"success": False, "error": "Failed to get response from chat API"}
             
         except Exception as e:
             logger.error(f"❌ Image generation failed: {e}")
