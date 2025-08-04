@@ -56,7 +56,7 @@ class QwenEnhancedClient(QwenCompleteClient):
                 "stream": False,  # Image generation returns single result
                 "incremental_output": True,
                 "chat_id": chat_id,
-                "chat_mode": "image",  # Use image mode for generation
+                "chat_mode": "normal",  # Keep as normal mode
                 "model": model,
                 "parent_id": None,
                 "messages": [{
