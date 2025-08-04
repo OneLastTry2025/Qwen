@@ -124,11 +124,16 @@ class QwenEnhancedClient(QwenCompleteClient):
                     image_url = data_content.get('image_url') or data_content.get('url')
                     
             logger.info(f"✅ Image generation completed for prompt: {prompt[:50]}...")
+            
+            # DETAILED LOGGING FOR DEBUGGING
+            logger.info(f"🔍 FULL API RESPONSE STRUCTURE:")
+            logger.info(f"Response keys: {list(data.keys()) if isinstance(data, dict) else 'Not a dict'}")
+            logger.info(f"Full response data: {json.dumps(data, indent=2)}")
+            
             if image_url:
                 logger.info(f"✅ Image URL extracted: {image_url[:100]}...")
             else:
                 logger.warning(f"⚠️ No image URL found in response")
-                logger.debug(f"Response data: {json.dumps(data, indent=2)[:500]}...")
             
             return {
                 "success": True,
