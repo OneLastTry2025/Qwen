@@ -34,10 +34,9 @@ class QwenEnhancedClient(QwenCompleteClient):
     # ADVANCED FEATURES - IMAGE GENERATION
     # ==========================================
     
-    def generate_image(self, prompt: str, chat_id: str = None, model: str = "qwen2.5-omni-7b") -> Dict[str, Any]:
+    def generate_image(self, prompt: str, chat_id: str = None, model: str = "qwen3-235b-a22b") -> Dict[str, Any]:
         """
-        Generate image from text prompt using t2i chat type
-        Uses Qwen2.5-Omni which has native t2i support without MCP
+        Generate image from text prompt using MCP image-generation action
         """
         try:
             if not chat_id:
@@ -51,7 +50,7 @@ class QwenEnhancedClient(QwenCompleteClient):
             fid = str(uuid.uuid4())
             timestamp = int(time.time())
             
-            # Native t2i payload (without MCP complexity)
+            # MCP-based image generation payload
             payload = {
                 "stream": False,
                 "incremental_output": True,
@@ -65,26 +64,37 @@ class QwenEnhancedClient(QwenCompleteClient):
                     "childrenIds": [],
                     "role": "user",
                     "content": prompt,
-                    "user_action": "chat",
+                    "user_action": "image_generation",  # Specific action for image generation
                     "files": [],
                     "timestamp": timestamp,
                     "models": [model],
-                    "chat_type": "t2i",  # Direct text-to-image
+                    "chat_type": "t2t",  # Keep as text-to-text but use MCP for image generation
                     "feature_config": {
                         "thinking_enabled": False,
                         "output_schema": "phase"
                     },
                     "extra": {
                         "meta": {
-                            "subChatType": "t2i"
+                            "subChatType": "t2t"
                         }
                     },
-                    "sub_chat_type": "t2i",
-                    "parent_id": None
+                    "sub_chat_type": "t2t",
+                    "parent_id": None,
+                    "mcp_action": {  # This is the key MCP structure
+                        "action": "image-generation",
+                        "parameters": {
+                            "prompt": prompt,
+                            "model": model,
+                            "quality": "standard",
+                            "style": "realistic"
+                        }
+                    }
                 }],
                 "timestamp": timestamp,
                 "turn_id": turn_id,
-                "modelIdx": 0
+                "modelIdx": 0,
+                "mcp_enabled": True,  # Enable MCP processing
+                "action_type": "image_generation"  # Top-level action indicator
             }
             
             url = f"{self.base_url}/api/v2/chat/completions"
@@ -95,45 +105,57 @@ class QwenEnhancedClient(QwenCompleteClient):
             
             data = response.json()
             
-            # Extract image URL from response
+            # Extract image URL from MCP response
             image_url = None
             
             if data.get('success') and 'data' in data:
                 response_data = data['data']
                 
-                # Try to extract from choices structure
-                if 'choices' in response_data and response_data['choices']:
-                    choice = response_data['choices'][0]
-                    if 'message' in choice:
-                        message = choice['message']
-                        content = message.get('content', '')
-                        
-                        # Look for image URLs in content
-                        import re
-                        url_patterns = [
-                            r'https?://[^\s<>"]+\.(?:jpg|jpeg|png|gif|webp|bmp)',
-                            r'blob:[^)\s<>"]+',
-                            r'data:image/[^;]+;base64,[A-Za-z0-9+/=]+',
-                            r'https?://[^\s<>"]+/(?:file|attachment|image)/[^\s<>"]+',
-                        ]
-                        
-                        for pattern in url_patterns:
-                            matches = re.findall(pattern, content, re.IGNORECASE)
-                            if matches:
-                                image_url = matches[0]
-                                break
-                        
-                        # Also check if message has image attachment data
-                        if 'attachments' in message:
-                            for attachment in message['attachments']:
-                                if attachment.get('type') == 'image':
-                                    image_url = attachment.get('url') or attachment.get('src')
+                # Check MCP action results
+                if 'mcp_results' in response_data:
+                    mcp_results = response_data['mcp_results']
+                    if isinstance(mcp_results, list) and len(mcp_results) > 0:
+                        for result in mcp_results:
+                            if result.get('action') == 'image-generation':
+                                image_url = result.get('image_url') or result.get('url')
+                                if image_url:
                                     break
                 
-                # Try to extract from data level
+                # Fallback to choices structure
+                if not image_url and 'choices' in response_data:
+                    choices = response_data['choices']
+                    if choices and len(choices) > 0:
+                        choice = choices[0]
+                        if 'message' in choice:
+                            message = choice['message']
+                            content = message.get('content', '')
+                            
+                            # Look for image URLs in content
+                            import re
+                            url_patterns = [
+                                r'https?://[^\s<>"]+\.(?:jpg|jpeg|png|gif|webp|bmp)',
+                                r'blob:[^)\s<>"]+',
+                                r'data:image/[^;]+;base64,[A-Za-z0-9+/=]+',
+                                r'https?://[^\s<>"]+/(?:file|image|attachment)/[^\s<>"]+',
+                            ]
+                            
+                            for pattern in url_patterns:
+                                matches = re.findall(pattern, content, re.IGNORECASE)
+                                if matches:
+                                    image_url = matches[0]
+                                    break
+                            
+                            # Check for MCP attachments in message
+                            if 'attachments' in message:
+                                for attachment in message['attachments']:
+                                    if attachment.get('type') in ['image', 'file'] and attachment.get('url'):
+                                        image_url = attachment['url']
+                                        break
+                
+                # Try other possible response locations
                 if not image_url:
-                    for key in ['image_url', 'url', 'file_url', 'attachment_url']:
-                        if key in response_data:
+                    for key in ['image_url', 'url', 'file_url', 'attachment_url', 'generated_image']:
+                        if key in response_data and response_data[key]:
                             image_url = response_data[key]
                             break
             
