@@ -79,7 +79,7 @@ logger.info(f"Full response data: {json.dumps(data, indent=2)}")
 ## 🌐 Access Points:
 - **Frontend**: http://localhost:3000
 - **API**: http://localhost:8001/api
-- **Production**: https://ae4616c9-8ef9-44e0-a434-5447f7ca1524.preview.emergentagent.com
+- **Production**: https://6778fbf7-4391-4ed6-8b7b-3f4e4a372975.preview.emergentagent.com
 - **Test Image API**: `curl -X POST .../api/image -d '{"prompt": "A simple red circle"}'`
 
 ## 🧠 RESEARCH LEADS FOR E1:
