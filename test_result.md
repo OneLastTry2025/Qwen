@@ -19,7 +19,7 @@ The Qwen Direct API application was experiencing critical API connection failure
 ## ✅ **Solutions Implemented**
 
 ### **Frontend Configuration Fixed:**
-- ✅ Updated `/app/frontend/.env` with correct production URL: `https://2ed0a502-14ed-4be3-9891-31fb56f341b0.preview.emergentagent.com`
+- ✅ Updated `/app/frontend/.env` with correct production URL: `https://b391ff1a-7086-452a-acb6-b0fcd13484da.preview.emergentagent.com`
 - ✅ Rebuilt React application with correct backend URL baked into static files
 - ✅ Verified new build files contain proper production URL references
 
