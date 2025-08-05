@@ -194,76 +194,151 @@ class QwenEnhancedClient(QwenCompleteClient):
     
     def _try_alternative_image_generation(self, prompt: str, chat_id: str) -> Dict[str, Any]:
         """
-        Alternative image generation method using direct image API endpoint
+        Alternative image generation method trying direct MCP tool invocation
         """
         try:
-            logger.info("🔄 Trying alternative image generation method...")
+            logger.info("🔄 Trying alternative MCP image generation method...")
             
-            # Try direct image generation endpoint
-            payload = {
-                "model": "wanx-v1",
-                "prompt": prompt,
-                "size": "1024x1024",
-                "quality": "standard",
-                "n": 1,
-                "response_format": "url"
+            # Try direct MCP tool invocation with different approach
+            turn_id = str(uuid.uuid4())
+            fid = str(uuid.uuid4())
+            timestamp = int(time.time())
+            
+            # Alternative payload structure that might work better
+            alt_payload = {
+                "stream": False,
+                "incremental_output": True,
+                "chat_id": chat_id,
+                "chat_mode": "normal",
+                "model": "qwen3-235b-a22b",  # Use flagship model with MCP support
+                "parent_id": None,
+                "messages": [{
+                    "fid": fid,
+                    "parentId": None,
+                    "childrenIds": [],
+                    "role": "user",
+                    "content": f"Please use the image generation tool to create an image of: {prompt}",
+                    "user_action": "chat",
+                    "files": [],
+                    "timestamp": timestamp,
+                    "models": ["qwen3-235b-a22b"],
+                    "chat_type": "t2i",
+                    "feature_config": {
+                        "thinking_enabled": False,
+                        "output_schema": "phase"
+                    },
+                    "extra": {
+                        "meta": {
+                            "subChatType": "t2i"
+                        }
+                    },
+                    "sub_chat_type": "t2i",
+                    "parent_id": None
+                }],
+                "timestamp": timestamp,
+                "turn_id": turn_id,
+                "modelIdx": 0,
+                # Explicit MCP tool specification
+                "tools": [{
+                    "type": "mcp",
+                    "function": {
+                        "name": "image-generation",
+                        "parameters": {
+                            "prompt": prompt,
+                            "size": "1024x1024",
+                            "quality": "standard",
+                            "style": "realistic"
+                        }
+                    }
+                }],
+                "tool_choice": {"type": "function", "function": {"name": "image-generation"}}
             }
             
-            # Try different possible endpoints
-            endpoints_to_try = [
-                f"{self.base_url}/api/v2/images/generations",
-                f"{self.base_url}/api/images/generations", 
-                f"{self.base_url}/api/v1/images/generations",
-                f"{self.base_url}/api/wanx/generate"
-            ]
+            url = f"{self.base_url}/api/v2/chat/completions"
+            params = {"chat_id": chat_id}
             
-            for endpoint in endpoints_to_try:
-                try:
-                    logger.info(f"🎯 Trying endpoint: {endpoint}")
-                    response = self.session.post(endpoint, json=payload)
-                    
-                    if response.status_code == 200:
-                        data = response.json()
-                        logger.info(f"✅ Alternative endpoint successful: {endpoint}")
-                        logger.info(f"Response: {json.dumps(data, indent=2)}")
-                        
-                        # Extract image URL from standard format
-                        image_url = None
-                        if 'data' in data and isinstance(data['data'], list) and len(data['data']) > 0:
-                            image_data = data['data'][0]
-                            image_url = image_data.get('url')
-                        elif 'url' in data:
-                            image_url = data['url']
-                        elif 'image_url' in data:
-                            image_url = data['image_url']
-                        
-                        if image_url:
-                            return {
-                                "success": True,
-                                "image_url": image_url,
-                                "chat_id": chat_id,
-                                "data": data
-                            }
-                    
-                except Exception as endpoint_error:
-                    logger.info(f"⚠️ Endpoint {endpoint} failed: {endpoint_error}")
-                    continue
+            logger.info(f"🎯 Trying alternative MCP approach")
+            response = self.session.post(url, json=alt_payload, params=params)
             
-            # If all alternative methods fail, return a descriptive error
+            if response.status_code == 200:
+                data = response.json()
+                logger.info(f"✅ Alternative MCP method response received")
+                logger.info(f"Response: {json.dumps(data, indent=2)}")
+                
+                # Look for image in response
+                image_url = self._extract_image_url_from_response(data)
+                
+                if image_url:
+                    return {
+                        "success": True,
+                        "image_url": image_url,
+                        "chat_id": chat_id,
+                        "data": data
+                    }
+                else:
+                    logger.warning("⚠️ Alternative method also returned no image URL")
+            
+            # If still no success, provide helpful error message
             return {
                 "success": False,
-                "error": "Image generation currently not available via Direct API. The model returned a text description instead of generating an actual image.",
+                "error": "Image generation is not properly configured. The Qwen API appears to be returning text descriptions instead of actual images. This may be due to MCP tool configuration or API limitations.",
                 "chat_id": chat_id,
-                "description": "Qwen returned a text description of the image instead of generating a visual image. This suggests the image generation feature may need different API parameters or endpoints."
+                "suggestion": "The model has image generation capabilities listed but may require different API parameters or authentication levels to access actual image generation."
             }
             
         except Exception as e:
             logger.error(f"❌ Alternative image generation failed: {e}")
             return {
                 "success": False,
-                "error": f"All image generation methods failed: {e}",
+                "error": f"Alternative image generation method failed: {e}",
                 "chat_id": chat_id
             }
+    
+    def _extract_image_url_from_response(self, data: dict) -> str:
+        """
+        Comprehensive image URL extraction from API response
+        """
+        image_url = None
+        
+        if not data.get('success') or 'data' not in data:
+            return None
+            
+        response_data = data['data']
+        
+        # Check for tool calls/results
+        search_locations = [
+            'tool_calls', 'tool_results', 'mcp_results', 'function_calls',
+            'attachments', 'files', 'media', 'images'
+        ]
+        
+        for location in search_locations:
+            if location in response_data:
+                result = response_data[location]
+                if isinstance(result, list) and len(result) > 0:
+                    for item in result:
+                        if isinstance(item, dict):
+                            # Look for URL keys
+                            for url_key in ['url', 'image_url', 'file_url', 'attachment_url', 'output']:
+                                if url_key in item and item[url_key]:
+                                    image_url = item[url_key]
+                                    break
+                        if image_url:
+                            break
+                if image_url:
+                    break
+        
+        # Check choices structure as fallback
+        if not image_url and 'choices' in response_data:
+            choices = response_data['choices']
+            if choices and len(choices) > 0:
+                choice = choices[0]
+                if 'message' in choice and 'attachments' in choice['message']:
+                    for attachment in choice['message']['attachments']:
+                        if attachment.get('type') in ['image', 'picture'] and attachment.get('url'):
+                            image_url = attachment['url']
+                            break
+        
+        return image_url
     
     # ==========================================
     # ADVANCED FEATURES - FILE UPLOAD
