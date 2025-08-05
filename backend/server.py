@@ -242,18 +242,20 @@ class HybridQwenServer:
                 }
             }
         else:
-            # Default/standard models (Turbo, etc.)
+            # Default/standard models (Turbo, etc.) - many now support image generation
             return {
                 "category": "standard",
                 "supports_web_search": True,
                 "supports_files": True,
+                "supports_images": True,  # Enable image generation for standard models
                 "optimal_temperature": 0.3,
                 "max_tokens": 2048,
                 "thinking_enabled": False,
                 "output_schema": "phase",
                 "feature_config": {
                     "thinking_enabled": False,
-                    "output_schema": "phase"
+                    "output_schema": "phase",
+                    "image_generation": True
                 }
             }
 
