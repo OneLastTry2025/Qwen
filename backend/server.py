@@ -205,11 +205,12 @@ class HybridQwenServer:
                 }
             }
         elif any(x in model_lower for x in ["max", "plus", "235b"]):
-            # High-capability models
+            # High-capability models (including image generation via MCP)
             return {
                 "category": "advanced",
                 "supports_web_search": True,
                 "supports_files": True,
+                "supports_images": True,  # Enable image generation
                 "optimal_temperature": 0.3,
                 "max_tokens": 6144,
                 "thinking_enabled": True,
@@ -217,7 +218,8 @@ class HybridQwenServer:
                 "feature_config": {
                     "thinking_enabled": True,
                     "output_schema": "phase",
-                    "advanced_reasoning": True
+                    "advanced_reasoning": True,
+                    "image_generation": True  # Explicitly enable image generation
                 }
             }
         elif "omni" in model_lower:
