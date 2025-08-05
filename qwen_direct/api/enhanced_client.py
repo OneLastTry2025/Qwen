@@ -109,56 +109,73 @@ class QwenEnhancedClient(QwenCompleteClient):
             
             data = response.json()
             
-            # Extract image URL from MCP response
+            # Extract image URL from response with improved parsing for Wanx model
             image_url = None
             
             if data.get('success') and 'data' in data:
                 response_data = data['data']
                 
-                # Check MCP action results
-                if 'mcp_results' in response_data:
-                    mcp_results = response_data['mcp_results']
-                    if isinstance(mcp_results, list) and len(mcp_results) > 0:
-                        for result in mcp_results:
-                            if result.get('action') == 'image-generation':
-                                image_url = result.get('image_url') or result.get('url')
+                # Check for tool results (MCP responses)
+                if 'tool_results' in response_data:
+                    tool_results = response_data['tool_results']
+                    if isinstance(tool_results, list) and len(tool_results) > 0:
+                        for result in tool_results:
+                            if result.get('tool_name') == 'image_gen':
+                                image_url = result.get('image_url') or result.get('url') or result.get('output')
                                 if image_url:
                                     break
                 
-                # Fallback to choices structure
+                # Check for MCP results
+                if not image_url and 'mcp_results' in response_data:
+                    mcp_results = response_data['mcp_results']
+                    if isinstance(mcp_results, list) and len(mcp_results) > 0:
+                        for result in mcp_results:
+                            if 'image_gen' in str(result) or 'wanx' in str(result).lower():
+                                image_url = result.get('image_url') or result.get('url') or result.get('output')
+                                if image_url:
+                                    break
+                
+                # Check choices structure for embedded images or URLs
                 if not image_url and 'choices' in response_data:
                     choices = response_data['choices']
                     if choices and len(choices) > 0:
                         choice = choices[0]
                         if 'message' in choice:
                             message = choice['message']
-                            content = message.get('content', '')
                             
-                            # Look for image URLs in content
-                            import re
-                            url_patterns = [
-                                r'https?://[^\s<>"]+\.(?:jpg|jpeg|png|gif|webp|bmp)',
-                                r'blob:[^)\s<>"]+',
-                                r'data:image/[^;]+;base64,[A-Za-z0-9+/=]+',
-                                r'https?://[^\s<>"]+/(?:file|image|attachment)/[^\s<>"]+',
-                            ]
-                            
-                            for pattern in url_patterns:
-                                matches = re.findall(pattern, content, re.IGNORECASE)
-                                if matches:
-                                    image_url = matches[0]
-                                    break
-                            
-                            # Check for MCP attachments in message
+                            # Check for attachments first (most likely location for images)
                             if 'attachments' in message:
                                 for attachment in message['attachments']:
-                                    if attachment.get('type') in ['image', 'file'] and attachment.get('url'):
+                                    if attachment.get('type') in ['image', 'picture', 'file'] and attachment.get('url'):
                                         image_url = attachment['url']
                                         break
+                            
+                            # Check for embedded images in content
+                            if not image_url:
+                                content = message.get('content', '')
+                                # Look for image URLs in content using comprehensive patterns
+                                import re
+                                url_patterns = [
+                                    r'https?://[^\s<>"]+\.(?:jpg|jpeg|png|gif|webp|bmp|svg)',
+                                    r'blob:[^)\s<>"]+',
+                                    r'data:image/[^;]+;base64,[A-Za-z0-9+/=]+',
+                                    r'https?://[^\s<>"]+/(?:file|image|attachment|media)/[^\s<>"]+',
+                                    r'https?://[^\s<>"]*qwen[^\s<>"]*/[^\s<>"]*\.(jpg|jpeg|png|gif|webp)',
+                                ]
+                                
+                                for pattern in url_patterns:
+                                    matches = re.findall(pattern, content, re.IGNORECASE)
+                                    if matches:
+                                        image_url = matches[0] if isinstance(matches[0], str) else matches[0][0]
+                                        break
                 
-                # Try other possible response locations
+                # Try other possible response locations for image URLs
                 if not image_url:
-                    for key in ['image_url', 'url', 'file_url', 'attachment_url', 'generated_image']:
+                    search_keys = [
+                        'image_url', 'url', 'file_url', 'attachment_url', 'generated_image',
+                        'wanx_image_url', 'result_url', 'output_url', 'media_url'
+                    ]
+                    for key in search_keys:
                         if key in response_data and response_data[key]:
                             image_url = response_data[key]
                             break
