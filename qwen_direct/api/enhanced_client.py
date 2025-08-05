@@ -34,9 +34,9 @@ class QwenEnhancedClient(QwenCompleteClient):
     # ADVANCED FEATURES - IMAGE GENERATION
     # ==========================================
     
-    def generate_image(self, prompt: str, chat_id: str = None, model: str = "qwen3-235b-a22b") -> Dict[str, Any]:
+    def generate_image(self, prompt: str, chat_id: str = None, model: str = "wanx-v1") -> Dict[str, Any]:
         """
-        Generate image from text prompt using MCP image-generation action
+        Generate image from text prompt using Qwen's Wanx image generation model
         """
         try:
             if not chat_id:
@@ -50,13 +50,13 @@ class QwenEnhancedClient(QwenCompleteClient):
             fid = str(uuid.uuid4())
             timestamp = int(time.time())
             
-            # MCP-based image generation payload
+            # Updated payload for proper image generation using Wanx model
             payload = {
                 "stream": False,
                 "incremental_output": True,
                 "chat_id": chat_id,
                 "chat_mode": "normal",
-                "model": model,
+                "model": "wanx-v1",  # Use Wanx model specifically for image generation
                 "parent_id": None,
                 "messages": [{
                     "fid": fid,
@@ -64,37 +64,41 @@ class QwenEnhancedClient(QwenCompleteClient):
                     "childrenIds": [],
                     "role": "user",
                     "content": prompt,
-                    "user_action": "image_generation",  # Specific action for image generation
+                    "user_action": "image_generation",
                     "files": [],
                     "timestamp": timestamp,
-                    "models": [model],
-                    "chat_type": "t2t",  # Keep as text-to-text but use MCP for image generation
+                    "models": ["wanx-v1"],  # Ensure Wanx model is used
+                    "chat_type": "t2i",  # Text-to-Image instead of text-to-text
                     "feature_config": {
                         "thinking_enabled": False,
-                        "output_schema": "phase"
+                        "output_schema": "phase",
+                        "image_generation": True  # Explicitly enable image generation
                     },
                     "extra": {
                         "meta": {
-                            "subChatType": "t2t"
+                            "subChatType": "t2i"  # Text-to-image subchat type
                         }
                     },
-                    "sub_chat_type": "t2t",
+                    "sub_chat_type": "t2i",
                     "parent_id": None,
-                    "mcp_action": {  # This is the key MCP structure
-                        "action": "image-generation",
+                    # MCP structure for image_gen tool
+                    "mcp_tools": [{
+                        "name": "image_gen",
                         "parameters": {
                             "prompt": prompt,
-                            "model": model,
+                            "model": "wanx-v1",
+                            "size": "1024x1024",
                             "quality": "standard",
-                            "style": "realistic"
+                            "n": 1,
+                            "response_format": "url"
                         }
-                    }
+                    }]
                 }],
                 "timestamp": timestamp,
                 "turn_id": turn_id,
                 "modelIdx": 0,
-                "mcp_enabled": True,  # Enable MCP processing
-                "action_type": "image_generation"  # Top-level action indicator
+                "image_generation_mode": True,  # Enable image generation mode
+                "tools": ["image_gen"]  # Specify the image generation tool
             }
             
             url = f"{self.base_url}/api/v2/chat/completions"
