@@ -188,19 +188,94 @@ class QwenEnhancedClient(QwenCompleteClient):
             
             if image_url:
                 logger.info(f"✅ Image URL extracted: {image_url[:100]}...")
+                return {
+                    "success": True,
+                    "image_url": image_url,
+                    "chat_id": chat_id,
+                    "data": data
+                }
             else:
-                logger.warning(f"⚠️ No image URL found in response")
-            
-            return {
-                "success": True,
-                "image_url": image_url,
-                "chat_id": chat_id,
-                "data": data
-            }
-            
+                logger.warning(f"⚠️ No image URL found in response - trying alternative method")
+                
+                # Try alternative image generation API endpoint
+                return self._try_alternative_image_generation(prompt, chat_id)
+                
         except Exception as e:
             logger.error(f"❌ Image generation failed: {e}")
             return {"success": False, "error": f"Image generation failed: {e}"}
+    
+    def _try_alternative_image_generation(self, prompt: str, chat_id: str) -> Dict[str, Any]:
+        """
+        Alternative image generation method using direct image API endpoint
+        """
+        try:
+            logger.info("🔄 Trying alternative image generation method...")
+            
+            # Try direct image generation endpoint
+            payload = {
+                "model": "wanx-v1",
+                "prompt": prompt,
+                "size": "1024x1024",
+                "quality": "standard",
+                "n": 1,
+                "response_format": "url"
+            }
+            
+            # Try different possible endpoints
+            endpoints_to_try = [
+                f"{self.base_url}/api/v2/images/generations",
+                f"{self.base_url}/api/images/generations", 
+                f"{self.base_url}/api/v1/images/generations",
+                f"{self.base_url}/api/wanx/generate"
+            ]
+            
+            for endpoint in endpoints_to_try:
+                try:
+                    logger.info(f"🎯 Trying endpoint: {endpoint}")
+                    response = self.session.post(endpoint, json=payload)
+                    
+                    if response.status_code == 200:
+                        data = response.json()
+                        logger.info(f"✅ Alternative endpoint successful: {endpoint}")
+                        logger.info(f"Response: {json.dumps(data, indent=2)}")
+                        
+                        # Extract image URL from standard format
+                        image_url = None
+                        if 'data' in data and isinstance(data['data'], list) and len(data['data']) > 0:
+                            image_data = data['data'][0]
+                            image_url = image_data.get('url')
+                        elif 'url' in data:
+                            image_url = data['url']
+                        elif 'image_url' in data:
+                            image_url = data['image_url']
+                        
+                        if image_url:
+                            return {
+                                "success": True,
+                                "image_url": image_url,
+                                "chat_id": chat_id,
+                                "data": data
+                            }
+                    
+                except Exception as endpoint_error:
+                    logger.info(f"⚠️ Endpoint {endpoint} failed: {endpoint_error}")
+                    continue
+            
+            # If all alternative methods fail, return a descriptive error
+            return {
+                "success": False,
+                "error": "Image generation currently not available via Direct API. The model returned a text description instead of generating an actual image.",
+                "chat_id": chat_id,
+                "description": "Qwen returned a text description of the image instead of generating a visual image. This suggests the image generation feature may need different API parameters or endpoints."
+            }
+            
+        except Exception as e:
+            logger.error(f"❌ Alternative image generation failed: {e}")
+            return {
+                "success": False,
+                "error": f"All image generation methods failed: {e}",
+                "chat_id": chat_id
+            }
     
     # ==========================================
     # ADVANCED FEATURES - FILE UPLOAD
