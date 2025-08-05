@@ -1,0 +1,115 @@
+{
+  "cookies": [
+    {
+      "name": "APLUS_LS_KEY",
+      "value": "[\"APLUS_CORE_1.0.14_20250725115316_2de08ec6\"]",
+      "domain": "chat.qwen.ai",
+      "path": "/",
+      "expires": -1,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "__ETAG__CNA__ID__",
+      "value": "20250731_tO8RIa%2BSiEMCAa5bUud25Id%2B",
+      "domain": "chat.qwen.ai",
+      "path": "/",
+      "expires": -1,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "theme",
+      "value": "system",
+      "domain": "chat.qwen.ai",
+      "path": "/",
+      "expires": -1,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "isg__",
+      "value": "BBsbIqje9ykLWgvd_DubyRvkqn-F8C_yl0-dTQ1Yzpox7DvOlcXeQjluglTiTIfq",
+      "domain": "chat.qwen.ai",
+      "path": "/",
+      "expires": -1,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "token",
+      "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjA0YTFiNmVkLTQzMGItNDk5OC1iZWUwLTI5ZjI0ZTFjNWU1NSIsImxhc3RfcGFzc3dvcmRfY2hhbmdlIjoxNzUzOTQxMTE0LCJleHAiOjE3NTY1MzY2ODV9.QuyEDpGOvyewC2BQTaXhy0eVEyhfh2_aDkIZ3c1g450",
+      "domain": "chat.qwen.ai",
+      "path": "/",
+      "expires": -1,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    }
+  ],
+  "origins": [
+    {
+      "origin": "https://chat.qwen.ai",
+      "localStorage": [
+        {
+          "name": "APLUS_LS_KEY",
+          "value": "[\"APLUS_CORE_1.0.14_20250725115316_2de08ec6\"]"
+        },
+        {
+          "name": "__ETAG__CNA__ID__",
+          "value": "20250731_tO8RIa%2BSiEMCAa5bUud25Id%2B"
+        },
+        {
+          "name": "theme",
+          "value": "system"
+        },
+        {
+          "name": "isg__",
+          "value": "BBsbIqje9ykLWgvd_DubyRvkqn-F8C_yl0-dTQ1Yzpox7DvOlcXeQjluglTiTIfq"
+        },
+        {
+          "name": "token",
+          "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjA0YTFiNmVkLTQzMGItNDk5OC1iZWUwLTI5ZjI0ZTFjNWU1NSIsImxhc3RfcGFzc3dvcmRfY2hhbmdlIjoxNzUzOTQxMTE0LCJleHAiOjE3NTY1MzY2ODV9.QuyEDpGOvyewC2BQTaXhy0eVEyhfh2_aDkIZ3c1g450"
+        },
+        {
+          "name": "auyst",
+          "value": "1753940403"
+        },
+        {
+          "name": "syfhs",
+          "value": "650688840"
+        },
+        {
+          "name": "sidebar",
+          "value": "true"
+        },
+        {
+          "name": "ETLCD",
+          "value": "false"
+        },
+        {
+          "name": "locale",
+          "value": "en-US"
+        }
+      ],
+      "sessionStorage": [
+        {
+          "name": "routeIndex",
+          "value": "1"
+        },
+        {
+          "name": "sveltekit:snapshot",
+          "value": "{}"
+        },
+        {
+          "name": "sveltekit:scroll",
+          "value": "{\"1753944646262\":{\"x\":0,\"y\":0},\"1753944646263\":{\"x\":0,\"y\":0}}"
+        }
+      ]
+    }
+  ]
+}
