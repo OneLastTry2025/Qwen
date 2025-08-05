@@ -11,3 +11,4 @@ markupsafe
 werkzeug
 sseclient-py
 aiofiles
+blinker
