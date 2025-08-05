@@ -29,8 +29,41 @@ except ImportError:
     except ImportError:
         DIRECT_API_AVAILABLE = False
 
-# Import original Playwright system as fallback
-from server_original import BrowserManager, ask_qwen, generate_qwen_image, get_available_models
+# Import browser automation components
+try:
+    from complete_client import BrowserManager
+    # Define fallback functions for missing imports
+    async def ask_qwen(page, prompt, chat_id=None, use_web_search=False, file_paths=None, agent_name=None, model_name=None):
+        return {"success": False, "error": "Browser automation not available", "response": "Direct API only"}
+    
+    async def generate_qwen_image(page, prompt):
+        return {"success": False, "error": "Browser image generation not available", "image_url": None}
+    
+    async def get_available_models(page):
+        return {"success": False, "error": "Browser model fetching not available", "data": []}
+        
+except ImportError:
+    # Create dummy classes and functions if browser automation is not available
+    class BrowserManager:
+        def __init__(self, pool_size=1):
+            pass
+        async def initialize(self):
+            pass
+        async def shutdown(self):
+            pass
+        async def get_page(self):
+            return None
+        def release_page(self, page):
+            pass
+    
+    async def ask_qwen(page, prompt, chat_id=None, use_web_search=False, file_paths=None, agent_name=None, model_name=None):
+        return {"success": False, "error": "Browser automation not available", "response": "Direct API only"}
+    
+    async def generate_qwen_image(page, prompt):
+        return {"success": False, "error": "Browser image generation not available", "image_url": None}
+    
+    async def get_available_models(page):
+        return {"success": False, "error": "Browser model fetching not available", "data": []}
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
