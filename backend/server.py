@@ -156,11 +156,12 @@ class HybridQwenServer:
         
         # Model categories and their configurations
         if "coder" in model_lower:
-            # Coding models - optimized for code generation
+            # Coding models - optimized for code generation (many also support image generation)
             return {
                 "category": "coding",
                 "supports_web_search": True,
                 "supports_files": True,
+                "supports_images": True,  # Enable image generation for coder models
                 "optimal_temperature": 0.1,  # Lower for precise code
                 "max_tokens": 4096,
                 "thinking_enabled": True,  # Enable reasoning for complex code
@@ -168,7 +169,8 @@ class HybridQwenServer:
                 "feature_config": {
                     "thinking_enabled": True,
                     "output_schema": "phase",
-                    "code_completion": True
+                    "code_completion": True,
+                    "image_generation": True
                 }
             }
         elif any(x in model_lower for x in ["vl", "vision", "qvq"]):
