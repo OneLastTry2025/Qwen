@@ -534,21 +534,11 @@ async def model_info_handler(model_name: str):
         }
     })
 
-# --- Frontend Serving (maintain compatibility) ---
+# --- Frontend Serving ---
 @app.route('/')
 async def serve_index():
-    """Serve the main UI"""
-    # Check if React build exists, otherwise serve original UI
-    react_build_path = Path('/app/frontend/build/index.html')
-    if react_build_path.exists():
-        return await send_from_directory('/app/frontend/build', 'index.html')
-    else:
-        return await send_from_directory('ui_clone', 'index.html')
-
-@app.route('/assets/<path:filename>')
-async def serve_assets(filename):
-    """Serve static assets"""
-    return await send_from_directory('/app/ui_clone/assets', filename)
+    """Serve the React frontend"""
+    return await send_from_directory('/app/frontend/build', 'index.html')
 
 @app.route('/static/js/<filename>')
 async def serve_react_js(filename):
